@@ -29,8 +29,7 @@ export function useGeminiLive({ onToolCall }: UseGeminiLiveOptions) {
   const statusRef = useRef<VoiceStatus>('idle')
   const wsRef = useRef<WebSocket | null>(null)
   const playbackContextRef = useRef<AudioContext | null>(null)
-  const playbackQueueRef = useRef<Int16Array[]>([])
-  const isPlayingRef = useRef(false)
+  const nextPlayTimeRef = useRef(0)
   const refreshTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const onToolCallRef = useRef(onToolCall)
   const micStreamRef = useRef<MediaStream | null>(null)
@@ -45,14 +44,15 @@ export function useGeminiLive({ onToolCall }: UseGeminiLiveOptions) {
   }
 
   // ── Audio playback ──────────────────────────────────────────────────────────
+  // Chunks are scheduled directly on the AudioContext clock for gapless playback.
+  // A small pre-buffer delay before the first chunk prevents stutter from network jitter.
 
-  function playNextChunk() {
-    if (isPlayingRef.current || playbackQueueRef.current.length === 0) return
+  const PRE_BUFFER_S = 0.08 // 80ms pre-buffer on first chunk of each turn
+
+  function enqueueAudioChunk(pcm: Int16Array) {
     const ctx = playbackContextRef.current
     if (!ctx) return
-    isPlayingRef.current = true
 
-    const pcm = playbackQueueRef.current.shift()!
     const float32 = new Float32Array(pcm.length)
     for (let i = 0; i < pcm.length; i++) float32[i] = pcm[i] / 32768
 
@@ -61,8 +61,14 @@ export function useGeminiLive({ onToolCall }: UseGeminiLiveOptions) {
     const source = ctx.createBufferSource()
     source.buffer = buffer
     source.connect(ctx.destination)
-    source.onended = () => { isPlayingRef.current = false; playNextChunk() }
-    source.start()
+
+    const now = ctx.currentTime
+    if (nextPlayTimeRef.current < now + PRE_BUFFER_S) {
+      // First chunk of a turn (or we've fallen behind) — anchor with pre-buffer
+      nextPlayTimeRef.current = now + PRE_BUFFER_S
+    }
+    source.start(nextPlayTimeRef.current)
+    nextPlayTimeRef.current += buffer.duration
   }
 
   // ── Microphone capture ──────────────────────────────────────────────────────
@@ -185,8 +191,7 @@ export function useGeminiLive({ onToolCall }: UseGeminiLiveOptions) {
       for (const part of sc.modelTurn.parts) {
         if (part.inlineData?.mimeType?.startsWith('audio/')) {
           const bytes = Uint8Array.from(atob(part.inlineData.data), c => c.charCodeAt(0))
-          playbackQueueRef.current.push(new Int16Array(bytes.buffer))
-          playNextChunk()
+          enqueueAudioChunk(new Int16Array(bytes.buffer))
         }
         if (part.text) {
           setTranscript(prev => [...prev, { role: 'assistant', text: part.text!, timestamp: new Date() }])
@@ -199,9 +204,8 @@ export function useGeminiLive({ onToolCall }: UseGeminiLiveOptions) {
     }
 
     if (sc?.interrupted) {
-      // User interrupted — clear playback queue
-      playbackQueueRef.current = []
-      isPlayingRef.current = false
+      // User interrupted — reset scheduled playback clock
+      nextPlayTimeRef.current = 0
       updateStatus('listening')
     }
   }
@@ -215,8 +219,7 @@ export function useGeminiLive({ onToolCall }: UseGeminiLiveOptions) {
     wsRef.current = null
     playbackContextRef.current?.close()
     playbackContextRef.current = null
-    playbackQueueRef.current = []
-    isPlayingRef.current = false
+    nextPlayTimeRef.current = 0
     updateStatus('idle')
   }, [])
 
