@@ -9,6 +9,14 @@ export async function POST() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const allowedEmails = process.env.ALLOWED_EMAILS
+  if (allowedEmails) {
+    const allowed = allowedEmails.split(',').map(e => e.trim().toLowerCase())
+    if (!allowed.includes((user.email ?? '').toLowerCase())) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+  }
+
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 })
