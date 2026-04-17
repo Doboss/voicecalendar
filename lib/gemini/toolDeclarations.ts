@@ -38,7 +38,7 @@ export const calendarTools = [
   },
   {
     name: 'deleteEvent',
-    description: 'Delete a calendar event by ID. Always confirm with the user before calling this.',
+    description: 'Delete a calendar event by ID. Always confirm with user first.',
     parameters: {
       type: 'OBJECT',
       required: ['id'],
@@ -49,7 +49,7 @@ export const calendarTools = [
   },
   {
     name: 'listEvents',
-    description: 'List events within a date range.',
+    description: 'List calendar events within a date range.',
     parameters: {
       type: 'OBJECT',
       required: ['start_date', 'end_date'],

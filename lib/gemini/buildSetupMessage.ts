@@ -4,29 +4,25 @@ export function buildSetupMessage(userTimezone: string) {
   const today = new Date().toISOString().split('T')[0]
   return {
     setup: {
-      model: 'models/gemini-2.5-flash-preview-native-audio-dialog',
-      tools: [{ functionDeclarations: calendarTools }],
-      system_instruction: {
+      model: 'models/gemini-2.5-flash-native-audio-latest',
+      generationConfig: {
+        responseModalities: ['AUDIO'],
+      },
+      systemInstruction: {
         parts: [
           {
-            text: `You are a friendly and helpful calendar assistant.
+            text: `You are a friendly voice calendar assistant.
 Today's date is ${today}. The user's timezone is ${userTimezone}.
-You have access to tools to manage the user's calendar.
-- When creating events, confirm the details back to the user.
+Use the provided tools to manage the user's calendar.
+- When creating events ask for title, date and time if not provided.
+- Confirm details before saving.
 - Always confirm before deleting an event.
-- When listing or searching events, summarize them clearly.
-- Be concise and conversational in your responses.`,
+- When listing events, summarize them clearly.
+- Keep responses short and conversational.`,
           },
         ],
       },
-      generation_config: {
-        response_modalities: ['AUDIO'],
-        speech_config: {
-          voice_config: {
-            prebuilt_voice_config: { voice_name: 'Aoede' },
-          },
-        },
-      },
+      tools: [{ functionDeclarations: calendarTools }],
     },
   }
 }

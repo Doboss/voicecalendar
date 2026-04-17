@@ -27,12 +27,12 @@ export function WeekView({ currentDate, events, onEventClick, onSlotClick }: Wee
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="grid border-b" style={{ gridTemplateColumns: '3rem repeat(7, 1fr)' }}>
+      <div className="grid border-b border-gray-200/60" style={{ gridTemplateColumns: '3rem repeat(7, 1fr)' }}>
         <div />
         {days.map((day, i) => {
           const isToday = isSameDay(day, today)
           return (
-            <div key={i} className="py-2 text-center border-l">
+            <div key={i} className="py-2 text-center border-l border-gray-200/60">
               <div className="text-xs text-gray-500 uppercase">{WEEKDAYS_SHORT[i]}</div>
               <div className={`mx-auto w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold ${
                 isToday ? 'bg-indigo-600 text-white' : 'text-gray-900'
@@ -45,10 +45,10 @@ export function WeekView({ currentDate, events, onEventClick, onSlotClick }: Wee
       </div>
 
       {/* All-day row */}
-      <div className="grid border-b" style={{ gridTemplateColumns: '3rem repeat(7, 1fr)' }}>
+      <div className="grid border-b border-gray-200/60" style={{ gridTemplateColumns: '3rem repeat(7, 1fr)' }}>
         <div className="text-xs text-gray-400 px-1 py-1 flex items-center">all day</div>
         {days.map((day, i) => (
-          <div key={i} className="border-l min-h-[2rem] p-0.5 space-y-0.5">
+          <div key={i} className="border-l border-gray-200/60 min-h-[2rem] p-0.5 space-y-0.5">
             {allDayEventsForDay(day).map(event => (
               <EventChip key={event.id} event={event} onClick={onEventClick} compact />
             ))}
@@ -67,7 +67,7 @@ export function WeekView({ currentDate, events, onEventClick, onSlotClick }: Wee
               {days.map((day, di) => (
                 <div
                   key={`cell-${hour}-${di}`}
-                  className="border-l border-b border-gray-100 h-14 hover:bg-gray-50 cursor-pointer relative"
+                  className="border-l border-b border-gray-200/60 h-14 hover:bg-gray-50 cursor-pointer relative"
                   onClick={() => onSlotClick(day, hour)}
                 >
                   {eventsForDay(day)

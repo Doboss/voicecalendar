@@ -7,7 +7,14 @@ import type { CalendarEvent, CreateEventInput, UpdateEventInput } from '@/types/
 export function useCalendarEvents() {
   const [events, setEvents] = useState<CalendarEvent[]>([])
   const [loading, setLoading] = useState(true)
+  const [userId, setUserId] = useState<string | null>(null)
   const supabase = createClient()
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id)
+    })
+  }, [supabase])
 
   const fetchEvents = useCallback(async () => {
     const { data, error } = await supabase
@@ -32,18 +39,21 @@ export function useCalendarEvents() {
   }, [fetchEvents, supabase])
 
   const createEvent = useCallback(async (input: CreateEventInput): Promise<CalendarEvent | null> => {
+    const uid = userId ?? (await supabase.auth.getUser()).data.user?.id
+    if (!uid) { console.error('createEvent: not authenticated'); return null }
+
     const { data, error } = await supabase
       .from('events')
-      .insert(input)
+      .insert({ ...input, user_id: uid })
       .select()
       .single()
-    if (error) { console.error('createEvent:', error); return null }
+    if (error) { console.error('createEvent:', error.message, error.details); return null }
     const event = data as CalendarEvent
     setEvents(prev => [...prev, event].sort((a, b) =>
       new Date(a.start_time).getTime() - new Date(b.start_time).getTime()
     ))
     return event
-  }, [supabase])
+  }, [supabase, userId])
 
   const updateEvent = useCallback(async (input: UpdateEventInput): Promise<CalendarEvent | null> => {
     const { id, ...fields } = input
@@ -53,7 +63,7 @@ export function useCalendarEvents() {
       .eq('id', id)
       .select()
       .single()
-    if (error) { console.error('updateEvent:', error); return null }
+    if (error) { console.error('updateEvent:', error.message, error.details); return null }
     const updated = data as CalendarEvent
     setEvents(prev => prev.map(e => e.id === id ? updated : e))
     return updated
@@ -61,7 +71,7 @@ export function useCalendarEvents() {
 
   const deleteEvent = useCallback(async (id: string): Promise<boolean> => {
     const { error } = await supabase.from('events').delete().eq('id', id)
-    if (error) { console.error('deleteEvent:', error); return false }
+    if (error) { console.error('deleteEvent:', error.message); return false }
     setEvents(prev => prev.filter(e => e.id !== id))
     return true
   }, [supabase])
@@ -73,7 +83,7 @@ export function useCalendarEvents() {
       .gte('start_time', startDate)
       .lte('start_time', endDate + 'T23:59:59')
       .order('start_time', { ascending: true })
-    if (error) return []
+    if (error) { console.error('listEvents:', error.message); return [] }
     return data as CalendarEvent[]
   }, [supabase])
 
@@ -86,7 +96,7 @@ export function useCalendarEvents() {
     if (endDate) q = q.lte('start_time', endDate + 'T23:59:59')
     q = q.order('start_time', { ascending: true })
     const { data, error } = await q
-    if (error) return []
+    if (error) { console.error('searchEvents:', error.message); return [] }
     return data as CalendarEvent[]
   }, [supabase])
 

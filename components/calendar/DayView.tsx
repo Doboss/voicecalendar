@@ -21,7 +21,7 @@ export function DayView({ currentDate, events, onEventClick, onSlotClick }: DayV
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <div className="border-b px-4 py-3 flex items-center gap-3">
+      <div className="border-b border-gray-200/60 px-4 py-3 flex items-center gap-3">
         <div className={`w-10 h-10 flex items-center justify-center rounded-full text-lg font-bold ${
           isToday ? 'bg-indigo-600 text-white' : 'text-gray-900'
         }`}>
@@ -35,7 +35,7 @@ export function DayView({ currentDate, events, onEventClick, onSlotClick }: DayV
 
       {/* All-day events */}
       {allDayEvents.length > 0 && (
-        <div className="border-b px-4 py-1 space-y-0.5">
+        <div className="border-b border-gray-200/60 px-4 py-1 space-y-0.5">
           {allDayEvents.map(event => (
             <EventChip key={event.id} event={event} onClick={onEventClick} compact />
           ))}
@@ -52,7 +52,7 @@ export function DayView({ currentDate, events, onEventClick, onSlotClick }: DayV
               </div>
               <div
                 key={`cell-${hour}`}
-                className="border-l border-b border-gray-100 h-16 hover:bg-gray-50 cursor-pointer relative"
+                className="border-l border-b border-gray-200/60 h-16 hover:bg-gray-50 cursor-pointer relative"
                 onClick={() => onSlotClick(currentDate, hour)}
               >
                 {dayEvents

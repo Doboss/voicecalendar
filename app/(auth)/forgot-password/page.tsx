@@ -7,13 +7,11 @@ import { createClient } from '@/lib/supabase/client'
 const inputCls = 'w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-colors duration-150'
 const labelCls = 'block text-xs font-medium text-gray-600 mb-1.5'
 
-export default function SignupPage() {
+export default function ForgotPasswordPage() {
   const supabase = createClient()
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [sent, setSent] = useState(false)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -21,32 +19,30 @@ export default function SignupPage() {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name } },
-    })
+    const redirectTo = `${window.location.origin}/reset-password`
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
 
     if (error) {
       setError(error.message)
       setLoading(false)
     } else {
-      setSuccess(true)
+      setSent(true)
     }
   }
 
-  if (success) {
+  if (sent) {
     return (
       <div className="min-h-full flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-sm bg-white rounded-2xl border border-gray-100 shadow-sm p-8 text-center space-y-3">
-          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-emerald-600">
-              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+          <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center mx-auto">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6 text-indigo-600">
+              <path d="M3 4a2 2 0 00-2 2v1.161l8.441 4.221a1.25 1.25 0 001.118 0L19 7.162V6a2 2 0 00-2-2H3z" />
+              <path d="M19 8.839l-7.77 3.885a2.75 2.75 0 01-2.46 0L1 8.839V14a2 2 0 002 2h14a2 2 0 002-2V8.839z" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">Check your email</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Check your inbox</h2>
           <p className="text-sm text-gray-500">
-            We sent a confirmation link to <strong className="text-gray-700">{email}</strong>.
+            We sent a password reset link to <strong className="text-gray-700">{email}</strong>.
           </p>
           <Link href="/login" className="inline-block text-sm font-medium text-indigo-600 hover:text-indigo-500 transition-colors mt-2">
             Back to sign in
@@ -59,7 +55,6 @@ export default function SignupPage() {
   return (
     <div className="min-h-full flex items-center justify-center py-12 px-4">
       <div className="w-full max-w-sm">
-        {/* Logo */}
         <div className="flex items-center gap-2.5 mb-8">
           <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-sm">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-white">
@@ -71,25 +66,13 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-7">
-          <h1 className="text-xl font-semibold text-gray-900 mb-1">Create an account</h1>
-          <p className="text-sm text-gray-500 mb-6">Get started with Voice Calendar</p>
+          <h1 className="text-xl font-semibold text-gray-900 mb-1">Forgot password?</h1>
+          <p className="text-sm text-gray-500 mb-6">Enter your email and we'll send you a reset link.</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="rounded-lg bg-red-50 border border-red-100 px-3.5 py-3 text-sm text-red-600">{error}</div>
             )}
-            <div>
-              <label htmlFor="name" className={labelCls}>Name</label>
-              <input
-                id="name"
-                type="text"
-                autoComplete="name"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                className={inputCls}
-                placeholder="Your name"
-              />
-            </div>
             <div>
               <label htmlFor="email" className={labelCls}>Email</label>
               <input
@@ -103,34 +86,19 @@ export default function SignupPage() {
                 placeholder="you@example.com"
               />
             </div>
-            <div>
-              <label htmlFor="password" className={labelCls}>Password</label>
-              <input
-                id="password"
-                type="password"
-                required
-                minLength={6}
-                autoComplete="new-password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className={inputCls}
-                placeholder="Min. 6 characters"
-              />
-            </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 transition-colors duration-150 disabled:opacity-50 shadow-sm mt-2"
+              className="w-full py-2.5 px-4 rounded-lg text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 transition-colors duration-150 disabled:opacity-50 shadow-sm"
             >
-              {loading ? 'Creating account…' : 'Create account'}
+              {loading ? 'Sending…' : 'Send reset link'}
             </button>
           </form>
         </div>
 
         <p className="text-center text-sm text-gray-500 mt-5">
-          Already have an account?{' '}
           <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
-            Sign in
+            Back to sign in
           </Link>
         </p>
       </div>

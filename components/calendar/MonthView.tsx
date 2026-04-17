@@ -21,14 +21,14 @@ export function MonthView({ currentDate, events, onEventClick, onSlotClick }: Mo
 
   return (
     <div className="flex flex-col h-full">
-      <div className="grid grid-cols-7 border-b">
+      <div className="grid grid-cols-7 border-b border-gray-200/60">
         {WEEKDAYS.map(d => (
-          <div key={d} className="py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wide">
+          <div key={d} className="py-2 text-center text-xs font-medium text-gray-400 uppercase tracking-wide">
             {d}
           </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 flex-1 divide-x divide-y">
+      <div className="grid grid-cols-7 flex-1 divide-x divide-y divide-gray-200/60">
         {weeks.flatMap((week, wi) =>
           week.map((day, di) => {
             const dayEvents = eventsForDay(day)
